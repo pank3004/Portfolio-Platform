@@ -4,7 +4,8 @@
 import axios from 'axios';
 
 // Base URL for API requests
-const API_BASE_URL = 'https://portfolio-platform-paff.onrender.com';
+const API_BASE_URL = 'https://portfolio-platform-paff.onrender.com/api';
+
 
 // Create axios instance with default config
 const api = axios.create({
