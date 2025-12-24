@@ -91,9 +91,6 @@ function AdminLogin() {
               </form>
               
               <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
-                Default credentials:<br/>
-                Email: admin@portfolio.com<br/>
-                Password: admin123
               </p>
             </div>
           </div>
