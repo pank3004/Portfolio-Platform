@@ -28,7 +28,14 @@ connectDB().then(() => {
 
 // Middleware
 // Enable CORS (Cross-Origin Resource Sharing) - allows frontend to make requests
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://portfolio-frontend-7v82.onrender.com'  // Add your frontend URL
+  ],
+  credentials: true
+}));
+
 
 // Parse JSON request bodies
 app.use(express.json());
