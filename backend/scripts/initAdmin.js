@@ -18,9 +18,28 @@ const initializeAdmin = async () => {
       console.log('📝 No admin found. Creating default admin...');
       
       // Get admin credentials from environment variables
-      const email = process.env.ADMIN_EMAIL || 'admin@portfolio.com';
-      const password = process.env.ADMIN_PASSWORD || 'admin123';
+      const email = process.env.ADMIN_EMAIL;
+      const password = process.env.ADMIN_PASSWORD;
       const name = 'Administrator';
+      
+      // Validate that required environment variables are set
+      if (!email || !password) {
+        throw new Error(
+          '❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in environment variables!\n' +
+          '   Please add them to your .env file or Render environment settings.'
+        );
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('❌ Invalid ADMIN_EMAIL format. Please provide a valid email address.');
+      }
+      
+      // Validate password strength
+      if (password.length < 6) {
+        throw new Error('❌ ADMIN_PASSWORD must be at least 6 characters long.');
+      }
       
       // Hash the password for security
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,14 +55,17 @@ const initializeAdmin = async () => {
       
       console.log('✅ Default admin created successfully!');
       console.log('📧 Email:', email);
-      console.log('🔑 Password:', password);
       console.log('⚠️  IMPORTANT: Change the default password after first login!\n');
     } else {
       console.log('✅ Admin user already exists. Skipping initialization.\n');
     }
   } catch (error) {
     console.error('❌ Error initializing admin:', error.message);
-    // Don't stop the server if admin creation fails
+    // Stop the server if admin creation fails due to missing credentials
+    if (error.message.includes('ADMIN_EMAIL') || error.message.includes('ADMIN_PASSWORD')) {
+      console.error('🛑 Server cannot start without proper admin configuration.');
+      process.exit(1); // Exit with error code
+    }
   }
 };
 
