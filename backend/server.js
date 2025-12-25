@@ -20,6 +20,10 @@ const aiUpdateRoutes = require('./routes/aiUpdateRoutes');
 // Initialize Express app
 const app = express();
 
+// Trust proxy - Required for Render and other cloud platforms
+// This allows express-rate-limit to work correctly behind a proxy
+app.set('trust proxy', 1);
+
 // Connect to MongoDB database and initialize admin
 connectDB().then(() => {
   // Auto-create default admin if not exists

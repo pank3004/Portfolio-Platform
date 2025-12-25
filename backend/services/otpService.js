@@ -4,21 +4,39 @@
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-// Configure email transporter (Gmail SMTP)
+// Configure email transporter
 function createTransporter() {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use STARTTLS
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD // Use App Password, not regular password
-    },
-    tls: {
-      rejectUnauthorized: false // Accept self-signed certificates
-    }
-  });
-  return transporter;
+  // Check if using SendGrid (recommended for production)
+  if (process.env.SENDGRID_API_KEY) {
+    return nodemailer.createTransporter({
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'apikey', // This is literal string 'apikey'
+        pass: process.env.SENDGRID_API_KEY
+      }
+    });
+  }
+  
+  // Fallback to Gmail (for local development only)
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+    console.log('⚠️  Using Gmail SMTP - This may not work on cloud platforms like Render');
+    return nodemailer.createTransporter({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+  }
+  
+  throw new Error('Email configuration missing. Please set SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASSWORD');
 }
 
 // Generate 6-digit OTP
@@ -36,8 +54,11 @@ const sendOTPEmail = async (email, otp) => {
   try {
     const transporter = createTransporter();
     
+    // Determine sender email
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || 'noreply@portfolio.com';
+    
     const mailOptions = {
-      from: `"Portfolio Platform Security" <${process.env.EMAIL_USER}>`,
+      from: `"Portfolio Platform Security" <${fromEmail}>`,
       to: email,
       subject: '🔐 Your Login Verification Code',
       html: `
