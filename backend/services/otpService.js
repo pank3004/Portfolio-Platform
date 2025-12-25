@@ -1,57 +1,23 @@
 // OTP Service
 // Handles OTP generation, validation, and email sending
+// Uses SendGrid HTTP API (works on ALL platforms including Render)
 
-// Debug: Check nodemailer version on startup
-console.log('=== NODEMAILER DEBUG ===');
-try {
-  const nodemailerVersion = require('../node_modules/nodemailer/package.json').version;
-  console.log('📦 Nodemailer version:', nodemailerVersion);
-} catch (e) {
-  console.log('⚠️  Could not read nodemailer version');
-}
-
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 
-console.log('✅ createTransport available:', typeof nodemailer.createTransport === 'function');
+// Initialize SendGrid with API key
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log('✅ SendGrid HTTP API initialized');
+} else {
+  console.error('❌ SENDGRID_API_KEY not set - email sending will fail');
+}
+
+console.log('=== EMAIL SERVICE DEBUG ===');
+console.log('📦 Using: @sendgrid/mail (HTTP API)');
 console.log('🔑 SENDGRID_API_KEY set:', !!process.env.SENDGRID_API_KEY);
 console.log('📧 EMAIL_USER set:', !!process.env.EMAIL_USER);
 console.log('========================');
-
-// Configure email transporter
-function createTransporter() {
-  // Check if using SendGrid (recommended for production)
-  if (process.env.SENDGRID_API_KEY) {
-    return nodemailer.createTransport({
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'apikey', // This is literal string 'apikey'
-        pass: process.env.SENDGRID_API_KEY
-      }
-    });
-  }
-  
-  // Fallback to Gmail (for local development only)
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-    console.log('⚠️  Using Gmail SMTP - This may not work on cloud platforms like Render');
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      },
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
-  }
-  
-  throw new Error('Email configuration missing. Please set SENDGRID_API_KEY or EMAIL_USER/EMAIL_PASSWORD');
-}
 
 // Generate 6-digit OTP
 const generateOTP = () => {
@@ -63,18 +29,21 @@ const getOTPExpiry = () => {
   return new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 };
 
-// Send OTP via Email
+// Send OTP via Email using SendGrid HTTP API
 const sendOTPEmail = async (email, otp) => {
   try {
-    const transporter = createTransporter();
-    
+    console.log('📧 Attempting to send OTP email via SendGrid HTTP API...');
+    console.log('📧 Recipient:', email);
+    console.log('📧 From:', process.env.EMAIL_USER);
+
     // Determine sender email
     const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER || 'noreply@portfolio.com';
     
-    const mailOptions = {
-      from: `"Portfolio Platform Security" <${fromEmail}>`,
+    const msg = {
       to: email,
+      from: fromEmail, // Must be verified in SendGrid
       subject: '🔐 Your Login Verification Code',
+      text: `Your OTP for login is: ${otp}. It will expire in 5 minutes.`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -191,11 +160,19 @@ const sendOTPEmail = async (email, otp) => {
       `
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ OTP email sent:', info.messageId);
+    // Send email using SendGrid HTTP API
+    const response = await sgMail.send(msg);
+    console.log('✅ OTP email sent successfully via SendGrid HTTP API');
+    console.log('✅ Response status:', response[0].statusCode);
     return true;
   } catch (error) {
     console.error('❌ Error sending OTP email:', error);
+    
+    // Log detailed error information from SendGrid
+    if (error.response) {
+      console.error('SendGrid Error Body:', error.response.body);
+    }
+    
     throw new Error('Failed to send OTP email');
   }
 };
