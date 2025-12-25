@@ -4,6 +4,14 @@
 import React, { useState, useEffect } from 'react';
 import { getAllAIUpdates } from '../utils/api';
 
+// Backend base URL for images
+
+                                   // for producction 
+const BACKEND_URL = 'https://portfolio-platform-paff.onrender.com';
+
+                                  // for local
+// const BACKEND_URL = 'http://localhost:5000';  // for local
+
 function AIUpdates() {
   const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +57,7 @@ function AIUpdates() {
               <div key={update._id} className="card">
                 {update.image && (
                   <img 
-                    src={`http://localhost:5000${update.image}`} 
+                    src={`${BACKEND_URL}${update.image}`} 
                     alt={update.title}
                     className="card-image"
                   />

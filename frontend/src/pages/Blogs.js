@@ -4,6 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { getAllBlogs } from '../utils/api';
 
+                                   // for producction 
+const BACKEND_URL = 'https://portfolio-platform-paff.onrender.com';
+
+                                  // for local
+// const BACKEND_URL = 'http://localhost:5000';  // for local
+
 function Blogs() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +86,7 @@ function Blogs() {
               <div key={blog._id} className="card">
                 {blog.image && (
                   <img 
-                    src={`http://localhost:5000${blog.image}`} 
+                    src={`${BACKEND_URL}${blog.image}`}  
                     alt={blog.title}
                     className="card-image"
                   />

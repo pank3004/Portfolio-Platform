@@ -4,6 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { getAllProjects } from '../utils/api';
 
+                                   // for producction 
+const BACKEND_URL = 'https://portfolio-platform-paff.onrender.com';
+
+                                  // for local
+// const BACKEND_URL = 'http://localhost:5000';  // for local
+
 function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +55,7 @@ function Projects() {
               <div key={project._id} className="card">
                 {project.image && (
                   <img 
-                    src={`http://localhost:5000${project.image}`} 
+                    src={`${BACKEND_URL}${project.image}`} 
                     alt={project.title}
                     className="card-image"
                   />
