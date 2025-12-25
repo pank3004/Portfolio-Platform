@@ -13,7 +13,7 @@ try {
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-console.log('✅ createTransporter available:', typeof nodemailer.createTransporter === 'function');
+console.log('✅ createTransport available:', typeof nodemailer.createTransport === 'function');
 console.log('🔑 SENDGRID_API_KEY set:', !!process.env.SENDGRID_API_KEY);
 console.log('📧 EMAIL_USER set:', !!process.env.EMAIL_USER);
 console.log('========================');
@@ -22,7 +22,7 @@ console.log('========================');
 function createTransporter() {
   // Check if using SendGrid (recommended for production)
   if (process.env.SENDGRID_API_KEY) {
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: 'smtp.sendgrid.net',
       port: 587,
       secure: false,
@@ -36,7 +36,7 @@ function createTransporter() {
   // Fallback to Gmail (for local development only)
   if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
     console.log('⚠️  Using Gmail SMTP - This may not work on cloud platforms like Render');
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
