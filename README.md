@@ -9,7 +9,9 @@ A full-featured portfolio website with content management system built using Mon
 - **Study Materials Platform**: Organize learning resources by category (Python, ML, DL, Generative AI, Agentic AI)
 - **Blog & Newsletter**: Publish articles and newsletters
 - **AI Updates**: Share latest AI and tech news
-- **Authentication**: Secure JWT-based admin authentication
+- **Authentication**: Secure two-step JWT-based admin authentication with OTP verification
+- **Two-Factor Auth**: Email-based OTP verification for enhanced security
+- **Admin Security**: Protected credential reset with JWT authentication
 - **File Uploads**: Support for images and PDFs
 - **Responsive Design**: Mobile-friendly interface
 
@@ -108,7 +110,7 @@ npm install
 
 ### Step 4: Configure Environment Variables
 
-The `.env` file is already created in the `backend` folder with default values:
+The `.env` file is already created in the `backend` folder. You need to add your email credentials:
 
 ```
 MONGODB_URI=mongodb://localhost:27017/portfolio_db
@@ -116,7 +118,25 @@ PORT=5000
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 ADMIN_EMAIL=admin@portfolio.com
 ADMIN_PASSWORD=admin123
+
+# Email Configuration (REQUIRED for OTP)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
 ```
+
+**⚠️ IMPORTANT - Gmail App Password Setup:**
+
+For OTP to work, you need a Gmail App Password (NOT your regular Gmail password):
+
+1. Go to your Google Account: https://myaccount.google.com/
+2. Click **Security** in the left sidebar
+3. Enable **2-Step Verification** if not already enabled
+4. Go back to Security and click **App passwords**
+5. Select **Mail** and **Other (Custom name)**
+6. Name it "Portfolio OTP" and click **Generate**
+7. Copy the 16-character password (no spaces)
+8. Paste it in `.env` as `EMAIL_PASSWORD`
+9. Set `EMAIL_USER` to your Gmail address
 
 **If using MongoDB Atlas:**
 Replace `MONGODB_URI` with your Atlas connection string:
@@ -180,13 +200,27 @@ The browser should automatically open. If not, visit http://localhost:3000
 
 ### Admin Panel
 
-1. **Login**: http://localhost:3000/admin/login
+1. **Login (Two-Step Process)**: http://localhost:3000/admin/login
+   
+   **Step 1 - Email & Password:**
    - Email: admin@portfolio.com
    - Password: admin123
+   - Click "Continue to OTP"
+   
+   **Step 2 - OTP Verification:**
+   - Check your email for the 6-digit code
+   - Enter the OTP within 5 minutes
+   - Click "Verify & Login"
+   - You're now logged in with full access!
 
 2. **Dashboard**: http://localhost:3000/admin/dashboard
 
-3. **Manage Content**:
+3. **Settings**: http://localhost:3000/admin/settings
+   - Change your admin email
+   - Change your admin password
+   - Both require current password verification
+
+4. **Manage Content**:
    - Projects: http://localhost:3000/admin/projects
    - Study Materials: http://localhost:3000/admin/study-materials
    - Blogs: http://localhost:3000/admin/blogs
@@ -237,8 +271,12 @@ The browser should automatically open. If not, visit http://localhost:3000
 
 ### Authentication
 - POST `/api/auth/create-admin` - Create admin user
-- POST `/api/auth/login` - Admin login
-- GET `/api/auth/me` - Get current admin info
+- POST `/api/auth/login` - Step 1: Email & password verification (returns temp token)
+- POST `/api/auth/verify-otp` - Step 2: OTP verification (returns access token)
+- POST `/api/auth/resend-otp` - Resend OTP if expired
+- POST `/api/auth/reset-email` - Change admin email (JWT protected)
+- POST `/api/auth/reset-password` - Change admin password (JWT protected)
+- GET `/api/auth/me` - Get current admin info (JWT protected)
 
 ### Projects
 - GET `/api/projects` - Get all active projects
@@ -292,6 +330,30 @@ The browser should automatically open. If not, visit http://localhost:3000
   curl -X POST http://localhost:5000/api/auth/create-admin -H "Content-Type: application/json" -d "{\"email\":\"admin@portfolio.com\",\"password\":\"admin123\",\"name\":\"Administrator\"}"
   ```
 
+### Not receiving OTP emails
+- **Check spam folder**: OTP emails might be in spam
+- **Verify email configuration in `.env`**:
+  - `EMAIL_USER` must be your Gmail address
+  - `EMAIL_PASSWORD` must be App Password (16 characters), not regular password
+- **Gmail App Password**: Make sure you generated an App Password correctly
+- **2-Step Verification**: Must be enabled on your Google Account
+- **Check backend console**: Look for email sending errors
+- **Test email credentials**: Send a test email manually
+- **Alternative**: Use a different Gmail account if current one has issues
+
+### OTP expired or invalid
+- OTP expires in **5 minutes** - enter it quickly
+- Each OTP can only be used **once**
+- Click "Resend Code" to get a new OTP
+- Don't refresh the page after getting OTP
+- Check your system time is correct
+
+### Rate limit errors
+- **"Too many requests"**: Wait for the specified time (15 min or 1 hour)
+- Rate limits are per IP address
+- Don't spam login/OTP buttons
+- This is a security feature to prevent brute force attacks
+
 ### File uploads not working
 - Check `backend/uploads` folder exists
 - Verify file size is under 10MB
@@ -335,14 +397,58 @@ Edit `frontend/src/pages/About.js` to add your information.
 ### Change Admin Credentials
 After first login, you can create a new admin user via API or modify the database directly.
 
+## 🔒 Security Features
+
+### Two-Step Authentication
+The admin panel uses enhanced two-step authentication:
+
+1. **Step 1**: Email + Password verification
+2. **Step 2**: OTP verification via email
+
+Even if someone knows your password, they cannot access the admin panel without the OTP sent to your email.
+
+### OTP Security
+- **6-digit numeric code**: Random generation for each login
+- **5-minute expiration**: Codes expire quickly to prevent misuse
+- **Single-use only**: Each OTP can only be used once
+- **Automatic cleanup**: OTP data is cleared after successful verification
+- **Beautiful email template**: Professional HTML emails with security warnings
+
+### JWT Token Types
+- **Temporary Token**: Valid for 10 minutes, only for OTP verification
+- **Access Token**: Valid for 7 days, grants full admin access
+- **Type validation**: Middleware ensures correct token type for each operation
+
+### Rate Limiting
+Protection against brute force attacks:
+- **Login**: 10 attempts per 15 minutes
+- **OTP Verification**: 10 attempts per 15 minutes
+- **Resend OTP**: 5 attempts per 15 minutes
+- **Credential Reset**: 3 attempts per hour
+
+### Protected Operations
+Admin credential changes (email/password) require:
+- Valid JWT access token
+- Current password verification
+- Automatic logout after email change
+
+### Email Configuration
+Secure email sending via Gmail SMTP:
+- Uses App Passwords (not regular Gmail password)
+- TLS encryption for email transmission
+- Professional HTML email templates
+- Clear security warnings in emails
+
 ## 📚 Technologies Used
 
 - **Frontend**: React 18, React Router, Axios
 - **Backend**: Node.js, Express.js
 - **Database**: MongoDB with Mongoose
-- **Authentication**: JWT (JSON Web Tokens)
+- **Authentication**: JWT (JSON Web Tokens) with two-step verification
+- **Email Service**: Nodemailer with Gmail SMTP
+- **Rate Limiting**: express-rate-limit
 - **File Upload**: Multer
-- **Security**: bcryptjs for password hashing
+- **Security**: bcryptjs for password hashing, crypto for OTP generation
 
 ## 💡 Tips for Beginners
 

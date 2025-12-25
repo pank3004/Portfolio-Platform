@@ -23,10 +23,35 @@ const adminSchema = new mongoose.Schema({
     type: String,
     default: 'Administrator'
   },
+  // OTP for two-factor authentication
+  otp: {
+    type: String,
+    default: null
+  },
+  // OTP expiry time
+  otpExpiry: {
+    type: Date,
+    default: null
+  },
+  // Flag to track if OTP has been used
+  otpUsed: {
+    type: Boolean,
+    default: false
+  },
+  // Temporary token for email/password verification (before OTP)
+  tempToken: {
+    type: String,
+    default: null
+  },
   // Timestamp for when admin was created
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // Last login timestamp
+  lastLogin: {
+    type: Date,
+    default: null
   }
 });
 

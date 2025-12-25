@@ -28,6 +28,10 @@ connectDB().then(() => {
 
 // Middleware
 // Enable CORS (Cross-Origin Resource Sharing) - allows frontend to make requests
+
+          // for local
+// app.use(cors())
+          // for production 
 app.use(cors({
   origin: [
     'http://localhost:3000',

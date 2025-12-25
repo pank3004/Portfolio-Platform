@@ -1,5 +1,5 @@
 // Admin Login Page Component
-// Login page for admin authentication
+// Login page for admin authentication with 2-step verification
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,13 +29,14 @@ function AdminLogin() {
     try {
       const response = await loginAdmin(credentials);
       
-      if (response.data.success) {
-        // Save token to localStorage
-        localStorage.setItem('adminToken', response.data.token);
-        localStorage.setItem('adminEmail', response.data.admin.email);
-        
-        // Redirect to admin dashboard
-        navigate('/admin/dashboard');
+      if (response.data.success && response.data.requiresOTP) {
+        // Step 1 successful, redirect to OTP verification
+        navigate('/admin/verify-otp', {
+          state: {
+            tempToken: response.data.tempToken,
+            email: response.data.email
+          }
+        });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -53,6 +54,24 @@ function AdminLogin() {
           
           <div className="card">
             <div className="card-content">
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                backgroundColor: '#f8f9fa',
+                borderRadius: '8px',
+                border: '1px solid #e9ecef'
+              }}>
+                <span style={{ fontSize: '1.5rem' }}>🔐</span>
+                <p style={{ 
+                  margin: '0.5rem 0 0 0', 
+                  fontSize: '0.9rem', 
+                  color: '#666' 
+                }}>
+                  Two-Step Authentication Enabled
+                </p>
+              </div>
+
               {error && <div className="error-message">{error}</div>}
               
               <form onSubmit={handleSubmit}>
@@ -86,11 +105,21 @@ function AdminLogin() {
                   disabled={loading}
                   style={{ width: '100%' }}
                 >
-                  {loading ? 'Logging in...' : 'Login'}
+                  {loading ? 'Verifying...' : 'Continue to OTP'}
                 </button>
               </form>
               
-              <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>
+              <p style={{ 
+                marginTop: '1.5rem', 
+                fontSize: '0.85rem', 
+                color: '#666',
+                textAlign: 'center',
+                padding: '1rem',
+                backgroundColor: '#fff3cd',
+                borderRadius: '4px',
+                border: '1px solid #ffc107'
+              }}>
+                📧 After login, you'll receive a verification code via email
               </p>
             </div>
           </div>

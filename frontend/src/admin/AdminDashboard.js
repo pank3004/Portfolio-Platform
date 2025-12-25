@@ -32,6 +32,7 @@ function AdminDashboard() {
           <li><Link to="/admin/study-materials">Manage Study Materials</Link></li>
           <li><Link to="/admin/blogs">Manage Blogs</Link></li>
           <li><Link to="/admin/ai-updates">Manage AI Updates</Link></li>
+          <li><Link to="/admin/settings">⚙️ Settings</Link></li>
           <li><button onClick={handleLogout} style={{ 
             background: 'none', 
             border: 'none', 

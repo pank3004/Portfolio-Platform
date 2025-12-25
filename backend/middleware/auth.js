@@ -1,5 +1,5 @@
 // Authentication Middleware
-// This middleware protects routes that require admin login
+// This middleware protects routes that require admin login with valid JWT
 
 const jwt = require('jsonwebtoken');
 
@@ -21,6 +21,14 @@ const authMiddleware = (req, res, next) => {
     // Verify the token using JWT_SECRET from environment variables
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // Ensure it's an access token (not temp token)
+    if (decoded.type !== 'access') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token type. Please complete OTP verification.'
+      });
+    }
+    
     // Add admin ID to request object so it can be used in route handlers
     req.adminId = decoded.id;
     
@@ -28,9 +36,16 @@ const authMiddleware = (req, res, next) => {
     next();
   } catch (error) {
     // Token is invalid or expired
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired. Please login again.'
+      });
+    }
+    
     res.status(401).json({ 
       success: false, 
-      message: 'Invalid or expired token.' 
+      message: 'Invalid token.' 
     });
   }
 };

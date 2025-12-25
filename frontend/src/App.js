@@ -21,6 +21,8 @@ import Contact from './pages/Contact';
 
 // Import admin pages
 import AdminLogin from './admin/AdminLogin';
+import OTPVerification from './admin/OTPVerification';
+import AdminSettings from './admin/AdminSettings';
 import AdminDashboard from './admin/AdminDashboard';
 import AdminProjects from './admin/AdminProjects';
 import AdminStudyMaterials from './admin/AdminStudyMaterials';
@@ -51,6 +53,8 @@ function App() {
 
           {/* Admin routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/verify-otp" element={<OTPVerification />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/projects" element={<AdminProjects />} />
           <Route path="/admin/study-materials" element={<AdminStudyMaterials />} />

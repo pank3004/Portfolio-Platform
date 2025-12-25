@@ -4,7 +4,9 @@
 import axios from 'axios';
 
 // Base URL for API requests
-const API_BASE_URL = 'https://portfolio-platform-paff.onrender.com/api';
+const API_BASE_URL = 'https://portfolio-platform-paff.onrender.com/api';      // for production(put backend url)
+
+// const API_BASE_URL = 'http://localhost:5000/api';    // for local
 
 
 // Create axios instance with default config
@@ -33,6 +35,24 @@ api.interceptors.request.use(
 
 // Auth APIs
 export const loginAdmin = (credentials) => api.post('/auth/login', credentials);
+export const verifyOTP = (data, tempToken) => {
+  return axios.post(`${API_BASE_URL}/auth/verify-otp`, data, {
+    headers: {
+      'Authorization': `Bearer ${tempToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+};
+export const resendOTP = (tempToken) => {
+  return axios.post(`${API_BASE_URL}/auth/resend-otp`, {}, {
+    headers: {
+      'Authorization': `Bearer ${tempToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+};
+export const resetEmail = (data) => api.post('/auth/reset-email', data);
+export const resetPassword = (data) => api.post('/auth/reset-password', data);
 export const createAdmin = (data) => api.post('/auth/create-admin', data);
 export const getAdminInfo = () => api.get('/auth/me');
 
