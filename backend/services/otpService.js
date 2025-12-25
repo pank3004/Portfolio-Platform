@@ -1,8 +1,22 @@
 // OTP Service
 // Handles OTP generation, validation, and email sending
 
+// Debug: Check nodemailer version on startup
+console.log('=== NODEMAILER DEBUG ===');
+try {
+  const nodemailerVersion = require('../node_modules/nodemailer/package.json').version;
+  console.log('📦 Nodemailer version:', nodemailerVersion);
+} catch (e) {
+  console.log('⚠️  Could not read nodemailer version');
+}
+
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+
+console.log('✅ createTransporter available:', typeof nodemailer.createTransporter === 'function');
+console.log('🔑 SENDGRID_API_KEY set:', !!process.env.SENDGRID_API_KEY);
+console.log('📧 EMAIL_USER set:', !!process.env.EMAIL_USER);
+console.log('========================');
 
 // Configure email transporter
 function createTransporter() {
