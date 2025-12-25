@@ -12,6 +12,7 @@ function AdminLogin() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Verifying...');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -25,11 +26,19 @@ function AdminLogin() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    setLoadingMessage('Verifying...');
+
+    // Show "waking up" message after 5 seconds
+    const wakingTimeout = setTimeout(() => {
+      setLoadingMessage('Waking up server... (This may take 30-60 seconds on first request)');
+    }, 5000);
 
     try {
       const response = await loginAdmin(credentials);
+      clearTimeout(wakingTimeout);
       
       if (response.data.success && response.data.requiresOTP) {
+        setLoadingMessage('Sending OTP...');
         // Step 1 successful, redirect to OTP verification
         navigate('/admin/verify-otp', {
           state: {
@@ -39,10 +48,26 @@ function AdminLogin() {
         });
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      clearTimeout(wakingTimeout);
+      
+      // Better error messages
+      if (err.code === 'ECONNABORTED') {
+        setError('Request timeout. The server might be sleeping. Please try again.');
+      } else if (err.response?.status === 500) {
+        setError(err.response?.data?.message || 'Server error. Please check if email is configured correctly.');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
+      
       console.error('Login error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        code: err.code,
+        response: err.response?.data
+      });
     } finally {
       setLoading(false);
+      clearTimeout(wakingTimeout);
     }
   };
 
@@ -72,7 +97,14 @@ function AdminLogin() {
                 </p>
               </div>
 
-              {error && <div className="error-message">{error}</div>}
+              {error && (
+                <div className="error-message" style={{ 
+                  whiteSpace: 'pre-wrap',
+                  marginBottom: '1rem'
+                }}>
+                  {error}
+                </div>
+              )}
               
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
@@ -84,6 +116,7 @@ function AdminLogin() {
                     value={credentials.email}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 
@@ -96,6 +129,7 @@ function AdminLogin() {
                     value={credentials.password}
                     onChange={handleChange}
                     required
+                    disabled={loading}
                   />
                 </div>
                 
@@ -105,7 +139,7 @@ function AdminLogin() {
                   disabled={loading}
                   style={{ width: '100%' }}
                 >
-                  {loading ? 'Verifying...' : 'Continue to OTP'}
+                  {loading ? loadingMessage : 'Continue to OTP'}
                 </button>
               </form>
               
@@ -121,6 +155,21 @@ function AdminLogin() {
               }}>
                 📧 After login, you'll receive a verification code via email
               </p>
+
+              {loading && (
+                <div style={{
+                  marginTop: '1rem',
+                  padding: '0.75rem',
+                  backgroundColor: '#e7f3ff',
+                  border: '1px solid #b3d9ff',
+                  borderRadius: '4px',
+                  fontSize: '0.85rem',
+                  color: '#004085',
+                  textAlign: 'center'
+                }}>
+                  ⏳ First request may take 30-60 seconds if the server was sleeping...
+                </div>
+              )}
             </div>
           </div>
         </div>

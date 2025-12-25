@@ -12,6 +12,7 @@ const API_BASE_URL = 'https://portfolio-platform-paff.onrender.com/api';      //
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 120000, // 120 seconds timeout (for cold starts on Render)
   headers: {
     'Content-Type': 'application/json'
   }
@@ -31,6 +32,19 @@ api.interceptors.request.use(
   }
 );
 
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout - server might be sleeping');
+    } else if (error.response?.status === 500) {
+      console.error('Server error:', error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // API functions
 
 // Auth APIs
@@ -40,7 +54,8 @@ export const verifyOTP = (data, tempToken) => {
     headers: {
       'Authorization': `Bearer ${tempToken}`,
       'Content-Type': 'application/json'
-    }
+    },
+    timeout: 120000 // 120 seconds timeout
   });
 };
 export const resendOTP = (tempToken) => {
@@ -48,7 +63,8 @@ export const resendOTP = (tempToken) => {
     headers: {
       'Authorization': `Bearer ${tempToken}`,
       'Content-Type': 'application/json'
-    }
+    },
+    timeout: 120000 // 120 seconds timeout
   });
 };
 export const resetEmail = (data) => api.post('/auth/reset-email', data);
