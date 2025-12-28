@@ -51,9 +51,8 @@ app.use(express.json());
 // Parse URL-encoded request bodies
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files as static files
-// Files in 'uploads' folder will be accessible at /uploads/filename
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Note: We're using Cloudinary for file storage, so no need to serve static files locally
+// Images are now served directly from Cloudinary CDN
 
 // API Routes
 // All routes are prefixed with /api

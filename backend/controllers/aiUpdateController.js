@@ -53,8 +53,8 @@ exports.createUpdate = async (req, res) => {
   try {
     const { title, content, sourceLink, category } = req.body;
     
-    // Get image path if file was uploaded
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
+    // Get image URL from Cloudinary (req.file.path contains the full Cloudinary URL)
+    const image = req.file ? req.file.path : '';
     
     const update = new AIUpdate({
       title,
@@ -101,9 +101,9 @@ exports.updateUpdate = async (req, res) => {
     if (category) update.category = category;
     if (isActive !== undefined) update.isActive = isActive;
     
-    // Update image if new file was uploaded
+    // Update image if new file was uploaded (Cloudinary URL in req.file.path)
     if (req.file) {
-      update.image = `/uploads/${req.file.filename}`;
+      update.image = req.file.path;
     }
     
     await update.save();

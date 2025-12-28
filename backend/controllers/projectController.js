@@ -53,8 +53,8 @@ exports.createProject = async (req, res) => {
   try {
     const { title, description, technologies, githubLink, liveLink } = req.body;
     
-    // Get image path if file was uploaded
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
+    // Get image URL from Cloudinary (req.file.path contains the full Cloudinary URL)
+    const image = req.file ? req.file.path : '';
     
     const project = new Project({
       title,
@@ -104,9 +104,9 @@ exports.updateProject = async (req, res) => {
     if (liveLink !== undefined) project.liveLink = liveLink;
     if (isActive !== undefined) project.isActive = isActive;
     
-    // Update image if new file was uploaded
+    // Update image if new file was uploaded (Cloudinary URL in req.file.path)
     if (req.file) {
-      project.image = `/uploads/${req.file.filename}`;
+      project.image = req.file.path;
     }
     
     await project.save();

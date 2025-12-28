@@ -76,10 +76,10 @@ exports.createMaterial = async (req, res) => {
   try {
     const { title, description, category, type, content, fileUrl } = req.body;
     
-    // Get file path if PDF was uploaded
+    // Get file URL from Cloudinary if PDF was uploaded (req.file.path contains the full Cloudinary URL)
     let materialFileUrl = fileUrl || '';
     if (type === 'PDF' && req.file) {
-      materialFileUrl = `/uploads/${req.file.filename}`;
+      materialFileUrl = req.file.path;
     }
     
     const material = new StudyMaterial({
@@ -130,9 +130,9 @@ exports.updateMaterial = async (req, res) => {
     if (fileUrl !== undefined) material.fileUrl = fileUrl;
     if (isActive !== undefined) material.isActive = isActive;
     
-    // Update file if new PDF was uploaded
+    // Update file if new PDF was uploaded (Cloudinary URL in req.file.path)
     if (req.file) {
-      material.fileUrl = `/uploads/${req.file.filename}`;
+      material.fileUrl = req.file.path;
     }
     
     await material.save();

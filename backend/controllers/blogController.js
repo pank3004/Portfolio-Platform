@@ -58,8 +58,8 @@ exports.createBlog = async (req, res) => {
   try {
     const { title, content, type, tags, author } = req.body;
     
-    // Get image path if file was uploaded
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
+    // Get image URL from Cloudinary (req.file.path contains the full Cloudinary URL)
+    const image = req.file ? req.file.path : '';
     
     const blog = new Blog({
       title,
@@ -108,9 +108,9 @@ exports.updateBlog = async (req, res) => {
     if (author) blog.author = author;
     if (isActive !== undefined) blog.isActive = isActive;
     
-    // Update image if new file was uploaded
+    // Update image if new file was uploaded (Cloudinary URL in req.file.path)
     if (req.file) {
-      blog.image = `/uploads/${req.file.filename}`;
+      blog.image = req.file.path;
     }
     
     blog.updatedAt = Date.now();

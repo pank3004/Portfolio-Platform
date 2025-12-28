@@ -1,20 +1,24 @@
 // File Upload Middleware
-// This configures Multer for handling file uploads (PDFs, images)
+// This configures Multer for handling file uploads with Cloudinary
 
 const multer = require('multer');
 const path = require('path');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
 
-// Configure storage settings for uploaded files
-const storage = multer.diskStorage({
-  // Set destination folder for uploads
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Files will be saved in 'uploads' folder
-  },
-  // Set filename for uploaded files
-  filename: function (req, file, cb) {
-    // Create unique filename: timestamp + original name
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+// Configure Cloudinary storage for Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'portfolio-uploads', // Folder name in Cloudinary
+    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'], // Allowed file types
+    resource_type: 'auto', // Automatically detect resource type (image/pdf)
+    public_id: (req, file) => {
+      // Create unique filename: timestamp + random number
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const fileName = uniqueSuffix + '-' + file.originalname.replace(/\.[^/.]+$/, "");
+      return fileName;
+    }
   }
 });
 
