@@ -36,6 +36,17 @@ function AIUpdates() {
     }
   };
 
+  // Helper function to get correct image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Otherwise, it's a local path, prepend backend URL
+    return `${BACKEND_URL}${imagePath}`;
+  };
+
   if (loading) {
     return <div className="loading">Loading AI updates...</div>;
   }
@@ -57,7 +68,7 @@ function AIUpdates() {
               <div key={update._id} className="card">
                 {update.image && (
                   <img 
-                    src={`${BACKEND_URL}${update.image}`} 
+                    src={getImageUrl(update.image)}
                     alt={update.title}
                     className="card-image"
                   />

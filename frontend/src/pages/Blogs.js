@@ -35,6 +35,17 @@ function Blogs() {
     }
   };
 
+  // Helper function to get correct image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Otherwise, it's a local path, prepend backend URL
+    return `${BACKEND_URL}${imagePath}`;
+  };
+
   // Filter blogs by type
   const filteredBlogs = filter === 'All' 
     ? blogs 
@@ -86,7 +97,7 @@ function Blogs() {
               <div key={blog._id} className="card">
                 {blog.image && (
                   <img 
-                    src={`${BACKEND_URL}${blog.image}`}  
+                    src={getImageUrl(blog.image)}
                     alt={blog.title}
                     className="card-image"
                   />

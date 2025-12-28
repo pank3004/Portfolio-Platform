@@ -34,6 +34,17 @@ function Projects() {
     }
   };
 
+  // Helper function to get correct image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return '';
+    // If it's already a full URL (Cloudinary), use it directly
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    // Otherwise, it's a local path, prepend backend URL
+    return `${BACKEND_URL}${imagePath}`;
+  };
+
   if (loading) {
     return <div className="loading">Loading projects...</div>;
   }
@@ -55,7 +66,7 @@ function Projects() {
               <div key={project._id} className="card">
                 {project.image && (
                   <img 
-                    src={`${BACKEND_URL}${project.image}`} 
+                    src={getImageUrl(project.image)} 
                     alt={project.title}
                     className="card-image"
                   />
